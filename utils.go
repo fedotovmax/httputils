@@ -28,8 +28,16 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 	}
 }
 
-type fallbackResponse struct {
+type ErrorResponse struct {
 	Message string `json:"message"`
+}
+
+func NewError(m string) ErrorResponse {
+	return ErrorResponse{Message: m}
+}
+
+func OK() ErrorResponse {
+	return ErrorResponse{Message: "OK"}
 }
 
 func HandleErrorFromGrpc(w http.ResponseWriter, err error) {
@@ -46,17 +54,17 @@ func HandleErrorFromGrpc(w http.ResponseWriter, err error) {
 					return
 				}
 			}
-			WriteJSON(w, http.StatusBadRequest, fallbackResponse{Message: st.Message()})
+			WriteJSON(w, http.StatusBadRequest, NewError(st.Message()))
 			return
 
 		default:
 			httpcode := GrpcCodeToHttp(st.Code())
-			WriteJSON(w, httpcode, fallbackResponse{Message: st.Message()})
+			WriteJSON(w, httpcode, NewError(st.Message()))
 			return
 		}
 	}
 
-	WriteJSON(w, http.StatusInternalServerError, fallbackResponse{Message: st.Message()})
+	WriteJSON(w, http.StatusInternalServerError, NewError(st.Message()))
 }
 
 /*
